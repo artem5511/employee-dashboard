@@ -1,98 +1,375 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Панель управления сотрудниками и проектами</title>
-  <link rel="stylesheet" href="css/styles.css">
+  <title>Employee & Project Dashboard</title>
+  <style>
+    :root{--primary:#2563eb;--success:#22c55e;--danger:#ef4444;--warning:#f59e0b;--bg:#f8fafc;--surface:#fff;--text:#1e293b;--border:#e2e8f0;--sidebar-w:280px;--sidebar-c:60px}
+    *{box-sizing:border-box;margin:0;padding:0}body{font-family:system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
+    .app{display:flex;min-height:100vh}.sidebar{width:var(--sidebar-w);background:var(--surface);border-right:1px solid var(--border);padding:1rem;transition:width.3s;position:relative;z-index:100}
+    .sidebar.collapsed{width:var(--sidebar-c)}.sidebar.collapsed .sb-content{display:none}
+    .sb-toggle{position:absolute;top:1rem;right:-18px;width:36px;height:36px;border:1px solid var(--border);border-radius:0 8px 8px 0;background:var(--surface);cursor:pointer}
+    .sb-title{font-size:1.25rem;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--border)}
+    .period-sel{display:flex;gap:.5rem;margin-bottom:1.5rem}.form-sel{flex:1;padding:.5rem;border:1px solid var(--border);border-radius:6px}
+    .nav-tabs{display:flex;flex-direction:column;gap:.25rem;margin-bottom:1.5rem}
+    .nav-tab{padding:.75rem 1rem;border:none;background:none;text-align:left;cursor:pointer;border-radius:6px}
+    .nav-tab:hover,.nav-tab.active{background:var(--primary);color:#fff}
+    .sb-actions{display:flex;flex-direction:column;gap:.5rem}
+    .btn{padding:.5rem 1rem;border:none;border-radius:6px;cursor:pointer;font-weight:500}.btn-sm{padding:.25rem .5rem;font-size:.875rem}
+    .btn-primary{background:var(--primary);color:#fff}.btn-danger{background:var(--danger);color:#fff}.btn-secondary{background:var(--surface);border:1px solid var(--border)}
+    .main{flex:1;padding:1.5rem;overflow-x:auto}.view{display:none}.view.active{display:block}
+    .view-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;flex-wrap:wrap;gap:.5rem}
+    .total-profit{font-weight:600;padding:.5rem 1rem;border-radius:6px}.total-profit.pos{background:#dcfce7;color:#166534}.total-profit.neg{background:#fee2e2;color:#991b1b}
+    .table-c{background:var(--surface);border-radius:8px;border:1px solid var(--border);overflow:hidden}
+    table{width:100%;border-collapse:collapse}th,td{padding:.75rem 1rem;text-align:left;border-bottom:1px solid var(--border)}
+    th{background:#f1f5f9;font-weight:600;cursor:pointer;user-select:none}th:hover{background:#e2e8f0}
+    tbody tr:hover{background:#f8fafc}.text-s{color:var(--success)}.text-d{color:var(--danger)}.overflow{color:var(--danger);font-weight:600}
+    .filters{display:flex;gap:.5rem;margin-bottom:1rem;flex-wrap:wrap}
+    .chip{display:inline-flex;align-items:center;gap:.25rem;padding:.25rem .5rem;background:var(--primary);color:#fff;border-radius:4px;font-size:.875rem}
+    .chip button{background:none;border:none;color:#fff;cursor:pointer}
+    .slide{position:fixed;top:0;right:-400px;width:400px;max-width:100vw;height:100vh;background:var(--surface);border-left:1px solid var(--border);padding:1.5rem;transition:right.3s;z-index:200;overflow-y:auto}
+    .slide.open{right:0}.slide-close{position:absolute;top:1rem;right:1rem;font-size:1.5rem;background:none;border:none;cursor:pointer}
+    .form-g{margin-bottom:1rem}.form-g label{display:block;margin-bottom:.25rem;font-weight:500}
+    .form-g input,.form-g select{width:100%;padding:.5rem;border:1px solid var(--border);border-radius:6px}
+    .form-g input.error{border-color:var(--danger)}.error{color:var(--danger);font-size:.875rem;margin-top:.25rem}
+    .form-a{display:flex;gap:.5rem;margin-top:1.5rem}
+    .modal-o{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;align-items:center;justify-content:center;z-index:300}
+    .modal-o.active{display:flex}.modal{background:var(--surface);border-radius:12px;padding:1.5rem;max-width:600px;width:90%;max-height:90vh;overflow-y:auto}
+    .modal-h{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem}.modal-close{background:none;border:none;font-size:1.5rem;cursor:pointer}
+    .popup{position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:1rem;box-shadow:0 4px 12px rgba(0,0,0,.15);z-index:250;min-width:250px}
+    .cal-g{display:grid;grid-template-columns:repeat(7,1fr);gap:.25rem;margin:1rem 0}
+    .cal-d{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:4px;cursor:pointer;border:1px solid transparent;font-size:.875rem}
+    .cal-d:hover{border-color:var(--primary)}.cal-d.we{background:#f1f5f9}.cal-d.va{background:var(--warning);color:#fff}.cal-d.to{border-color:var(--primary);font-weight:600}
+    .editable{cursor:pointer;padding:.25rem;border-radius:4px}.editable:hover{background:#f1f5f9}
+    @media(max-width:768px){.sidebar{position:fixed;left:-100%;width:var(--sidebar-w)}.sidebar.open{left:0}.main{padding:1rem}}
+  </style>
 </head>
 <body>
-  <div class="app-container">
-    <!-- Боковая панель -->
+  <div class="app">
     <aside class="sidebar" id="sidebar">
-      <button class="sidebar-toggle" id="sidebarToggle" aria-label="Переключить панель">☰</button>
-      <div class="sidebar-content">
-        <h2 class="sidebar-title">📊 Панель управления</h2>
-        <div class="period-selector">
-          <select id="monthSelect" class="form-select"></select>
-          <select id="yearSelect" class="form-select"></select>
+      <button class="sb-toggle" id="sbToggle">☰</button>
+      <div class="sb-content">
+        <h2 class="sb-title">📊 Dashboard</h2>
+        <div class="period-sel">
+          <select id="monthSel" class="form-sel"></select>
+          <select id="yearSel" class="form-sel"></select>
         </div>
         <nav class="nav-tabs">
-          <button class="nav-tab active" data-view="projects">📁 Проекты</button>
-          <button class="nav-tab" data-view="employees">👥 Сотрудники</button>
+          <button class="nav-tab active" data-view="projects">📁 Projects</button>
+          <button class="nav-tab" data-view="employees">👥 Employees</button>
         </nav>
-        <div class="sidebar-actions">
-          <button class="btn btn-secondary" id="seedDataBtn">🌱 Данные посева</button>
-          <button class="btn btn-primary" id="addBtn">➕ Добавить</button>
+        <div class="sb-actions">
+          <button class="btn btn-secondary" id="seedBtn">🌱 Seed Data</button>
+          <button class="btn btn-primary" id="addBtn">➕ Add</button>
         </div>
       </div>
     </aside>
-
-    <!-- Основная область -->
-    <main class="main-content">
-      <!-- Проекты -->
-      <section id="projectsView" class="view active">
-        <div class="view-header">
-          <h1>Проекты</h1>
-          <span class="total-profit" id="totalProfit"></span>
-        </div>
-        <div class="filters-bar" id="projectsFilters"></div>
-        <div class="table-container">
-          <table class="data-table" id="projectsTable">
-            <thead>
-              <tr>
-                <th data-sort="company" data-filter>Компания <span class="sort-icon">⇅</span> <span class="filter-icon">⌕</span></th>
-                <th data-sort="name" data-filter>Проект <span class="sort-icon">⇅</span> <span class="filter-icon">⌕</span></th>
-                <th data-sort="budget">Бюджет <span class="sort-icon">⇅</span></th>
-                <th data-sort="staff">Персонал <span class="sort-icon">⇅</span></th>
-                <th data-sort="forecast">Прогноз <span class="sort-icon">⇅</span></th>
-                <th>Действия</th>
-              </tr>
-            </thead>
-            <tbody id="projectsBody"></tbody>
-          </table>
+    <main class="main">
+      <section id="projView" class="view active">
+        <div class="view-h"><h1>Projects</h1><span class="total-profit" id="totalProfit"></span></div>
+        <div class="filters" id="projFilters"></div>
+        <div class="table-c">
+          <table><thead><tr>
+            <th data-sort="company" data-filter>Company ⇅ ⌕</th>
+            <th data-sort="name" data-filter>Project ⇅ ⌕</th>
+            <th data-sort="budget">Budget ⇅</th>
+            <th data-sort="staff">Staff ⇅</th>
+            <th data-sort="profit">Profit ⇅</th>
+            <th>Actions</th>
+          </tr></thead><tbody id="projBody"></tbody></table>
         </div>
       </section>
-
-      <!-- Сотрудники -->
-      <section id="employeesView" class="view">
-        <div class="view-header">
-          <h1>Сотрудники</h1>
-        </div>
-        <div class="filters-bar" id="employeesFilters"></div>
-        <div class="table-container">
-          <table class="data-table" id="employeesTable">
-            <thead>
-              <tr>
-                <th data-sort="firstName" data-filter>Имя <span class="sort-icon">⇅</span> <span class="filter-icon">⌕</span></th>
-                <th data-sort="lastName" data-filter>Фамилия <span class="sort-icon">⇅</span> <span class="filter-icon">⌕</span></th>
-                <th data-sort="age">Возраст <span class="sort-icon">⇅</span></th>
-                <th data-sort="position" data-filter>Должность <span class="sort-icon">⇅</span> <span class="filter-icon">⌕</span></th>
-                <th data-sort="salary">Зарплата <span class="sort-icon">⇅</span></th>
-                <th data-sort="payment">Выплата <span class="sort-icon">⇅</span></th>
-                <th>Проект</th>
-                <th data-sort="profit">Доход <span class="sort-icon">⇅</span></th>
-                <th>Действия</th>
-              </tr>
-            </thead>
-            <tbody id="employeesBody"></tbody>
-          </table>
+      <section id="empView" class="view">
+        <div class="view-h"><h1>Employees</h1></div>
+        <div class="filters" id="empFilters"></div>
+        <div class="table-c">
+          <table><thead><tr>
+            <th data-sort="firstName" data-filter>Name ⇅ ⌕</th>
+            <th data-sort="lastName" data-filter>Surname ⇅ ⌕</th>
+            <th data-sort="age">Age ⇅</th>
+            <th data-sort="position" data-filter>Position ⇅ ⌕</th>
+            <th data-sort="salary">Salary ⇅</th>
+            <th data-sort="payment">Payment ⇅</th>
+            <th>Project</th>
+            <th data-sort="profit">Income ⇅</th>
+            <th>Actions</th>
+          </tr></thead><tbody id="empBody"></tbody></table>
         </div>
       </section>
     </main>
   </div>
+  <div class="slide" id="slidePanel"><button class="slide-close" id="slideClose">×</button><div id="slideContent"></div></div>
+  <div class="modal-o" id="modalO"><div class="modal" id="modalC"></div></div>
+  <div id="popupC"></div>
 
-  <!-- Выдвижная панель -->
-  <div class="slide-panel" id="slidePanel">
-    <button class="slide-panel-close" id="slidePanelClose">×</button>
-    <div id="slidePanelContent"></div>
-  </div>
+  <script>
+  // === CONFIG ===
+  const CONFIG = {
+    KEY: 'monthlyData',
+    YEARS: [2025,2026,2027],
+    MONTHS: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'],
+    POSITIONS: ['Junior','Middle','Senior','Lead','Architect','BO'],
+    MIN_SALARY: 0.5, MIN_AGE: 18
+  };
 
-  <!-- Модальные окна -->
-  <div class="modal-overlay" id="modalOverlay"></div>
-  <div class="modal" id="modalContainer"></div>
-  <div id="popupContainer"></div>
+  // === STATE ===
+  const State = {
+    year: new Date().getFullYear(),
+    month: new Date().getMonth(),
+    view: 'projects',
+    filters: {proj:{}, emp:{}},
+    sort: {proj:{}, emp:{}}
+  };
 
-  <script type="module" src="js/app.js"></script>
+  // === STORAGE ===
+  const Store = {
+    getAll() { const d = localStorage.getItem(CONFIG.KEY); return d ? JSON.parse(d) : {}; },
+    saveAll(d) { localStorage.setItem(CONFIG.KEY, JSON.stringify(d)); },
+    getMonth(y,m) { const all = this.getAll(); return all[`${y}-${m}`] || {employees:[], projects:[]}; },
+    saveMonth(y,m,data) {
+      const all = this.getAll();
+      all[`${y}-${m}`] = {employees: data.employees||[], projects: data.projects||[]};
+      this.saveAll(all);
+    },
+    copyMonth(fy,fm,ty,tm) {
+      const from = this.getMonth(fy,fm);
+      const employees = from.employees.map(e => ({...e, id:`emp-${Date.now()}-${Math.random().toString(36).slice(2,9)}`, vacationDays:[], assignments: e.assignments.map(a=>({...a}))}));
+      const projects = from.projects.map(p => ({...p, id:`proj-${Date.now()}-${Math.random().toString(36).slice(2,9)}`, assignments: p.assignments.map(a=>({...a}))}));
+      this.saveMonth(ty,tm,{employees,projects});
+    },
+    genId(p) { return `${p}-${Date.now()}-${Math.random().toString(36).slice(2,9)}`; },
+    init() { if(!localStorage.getItem(CONFIG.KEY)) this.saveAll({}); }
+  };
+
+  // === CALCULATIONS ===
+  const Calc = {
+    workDays(y,m) { let c=0,d=new Date(y,m,1); while(d.getMonth()===m){if(d.getDay()!==0&&d.getDay()!==6)c++;d.setDate(d.getDate()+1)} return c; },
+    vacWorkDays(y,m,vac) { return vac.filter(day=>{const d=new Date(y,m,day);return d.getDay()!==0&&d.getDay()!==6}).length; },
+    vacCoeff(y,m,vac) { const w=this.workDays(y,m); return w===0?1:(w-this.vacWorkDays(y,m,vac))/w; },
+    effCap(cap,fit,vacC) { return parseFloat((cap*fit*vacC).toFixed(3)); },
+    projRevenue(proj,emps,y,m) {
+      let usedEff=0,byEmp={};
+      (proj.assignments||[]).forEach(a=>{
+        const emp=emps.find(e=>e.id===a.employeeId); if(!emp)return;
+        const vc=this.vacCoeff(y,m,emp.vacationDays||[]);
+        const ec=this.effCap(a.capacity,a.fit,vc);
+        usedEff+=ec; byEmp[emp.id]={effCap:ec,assignment:a};
+      });
+      const capRev=Math.max(proj.capacity,usedEff), revPer=proj.budget/capRev;
+      const revenues={};
+      (proj.assignments||[]).forEach(a=>{const emp=emps.find(e=>e.id===a.employeeId); if(emp&&byEmp[emp.id]) revenues[emp.id]=revPer*byEmp[emp.id].effCap});
+      return {total:revPer*usedEff,byEmployee:revenues,usedEffectiveCapacity:usedEff,revenuePerUnit:revPer};
+    },
+    empCost(sal,cap) { return sal*Math.max(CONFIG.MIN_SALARY,cap); },
+    projCosts(proj,emps) {
+      let total=0,byEmp={};
+      (proj.assignments||[]).forEach(a=>{const emp=emps.find(e=>e.id===a.employeeId); if(emp){const c=this.empCost(emp.salary,a.capacity);byEmp[emp.id]=c;total+=c}});
+      return {total,byEmployee:byEmp};
+    },
+    projProfit(proj,emps,y,m) { const r=this.projRevenue(proj,emps,y,m),c=this.projCosts(proj,emps); return r.total-c.total; },
+    empProfit(emp,projs,y,m) {
+      let p=0;
+      (emp.assignments||[]).forEach(a=>{const proj=projs.find(pr=>pr.id===a.projectId);if(!proj)return;
+        const vc=this.vacCoeff(y,m,emp.vacationDays||[]),ec=this.effCap(a.capacity,a.fit,vc);
+        const rd=this.projRevenue(proj,[emp],y,m),rev=rd.byEmployee[emp.id]||0,cost=this.empCost(emp.salary,a.capacity);
+        p+=rev-cost});
+      return p;
+    },
+    empPayment(emp) {
+      if(!emp.assignments?.length) return emp.salary*CONFIG.MIN_SALARY;
+      return emp.assignments.reduce((s,a)=>s+this.empCost(emp.salary,a.capacity),0);
+    },
+    totalProfit(projs,emps,y,m) {
+      let t=0; projs.forEach(p=>t+=this.projProfit(p,emps,y,m));
+      emps.forEach(e=>{if(!e.assignments?.length)t-=e.salary*CONFIG.MIN_SALARY});
+      return t;
+    }
+  };
+
+  // === SEED DATA ===
+  const Seed = {
+    names:['Ivan','Anna','Sergey','Maria','Dmitry','Elena','Alexey','Olga','Mikhail','Tatiana'],
+    surnames:['Ivanov','Petrov','Sidorov','Smirnov','Kuznetsov','Popov','Sokolov','Mikhailov','Novikov','Fedorov'],
+    companies:['TechCorp','GlobalSoft','InnoSystem','DataFlow','CloudNet','AlphaDev'],
+    projects:['Mobile App','CRM System','AI Chatbot','Payment Gateway','Analytics','Security'],
+    rand(min,max){return Math.floor(Math.random()*(max-min+1))+min},
+    randItem(arr){return arr[Math.floor(Math.random()*arr.length)]},
+    genEmp() {
+      const y=new Date().getFullYear()-this.rand(20,40);
+      return {id:Store.genId('emp'),firstName:this.randItem(this.names),lastName:this.randItem(this.surnames),
+        birthDate:`${y}-${String(this.rand(1,12)).padStart(2,'0')}-${String(this.rand(1,28)).padStart(2,'0')}`,
+        position:this.randItem(CONFIG.POSITIONS),salary:this.rand(1500,5000),assignments:[],vacationDays:[]};
+    },
+    genProj() {
+      return {id:Store.genId('proj'),name:this.randItem(this.projects),company:this.randItem(this.companies),
+        budget:this.rand(10000,100000),capacity:this.rand(2,5),assignments:[]};
+    },
+    seedMonth(y,m) {
+      const emps=Array.from({length:5},()=>this.genEmp()), projs=Array.from({length:3},()=>this.genProj());
+      projs.forEach(proj=>{const cnt=this.rand(1,Math.min(3,emps.length));
+        for(let i=0;i<cnt;i++){const emp=emps[this.rand(0,emps.length-1)],load=emp.assignments.reduce((s,a)=>s+a.capacity,0);
+          if(!emp.assignments.find(a=>a.projectId===proj.id)&&load<1.5){const cap=Math.min(0.5,1.5-load);
+            proj.assignments.push({employeeId:emp.id,capacity:cap,fit:this.rand(7,10)/10});
+            emp.assignments.push({projectId:proj.id,capacity:cap,fit:this.rand(7,10)/10});}}});
+      Store.saveMonth(y,m,{employees:emps,projects:projs});
+    },
+    showSeedModal() {
+      const all=Store.getAll(),cur=`${State.year}-${State.month}`,months=Object.keys(all).filter(k=>k!==cur);
+      let html='<h3>🌱 Seed Data</h3>';
+      if(months.length===0){html+='<p>No data to copy. <button class="btn btn-primary" id="genNew">Generate 5 employees + 3 projects</button></p>'}
+      else{html+='<p>Copy from:</p>';months.forEach(key=>{const[y,m]=key.split('-').map(Number),d=all[key];
+        html+=`<div style="padding:.5rem;border:1px solid var(--border);border-radius:4px;margin:.5rem 0;display:flex;justify-content:space-between;align-items:center">
+          <span><strong>${CONFIG.MONTHS[m]} ${y}</strong><br><small>👥 ${d.employees.length} | 📁 ${d.projects.length}</small></span>
+          <button class="btn btn-primary btn-sm" data-key="${key}">Copy</button></div>`});
+        html+='<hr style="margin:1rem 0"><p><button class="btn btn-secondary btn-sm" id="genNew">Or: Generate new data</button></p>'}
+      showModal(html,()=>{
+        document.getElementById('genNew')?.addEventListener('click',()=>{if(confirm('Generate random data?')){Seed.seedMonth(State.year,State.month);closeModal();location.reload()}});
+        document.querySelectorAll('.modal button[data-key]').forEach(btn=>btn.addEventListener('click',()=>{
+          const[y,m]=btn.dataset.key.split('-').map(Number);if(confirm(`Copy from ${CONFIG.MONTHS[m]} ${y}?`)){Store.copyMonth(y,m,State.year,State.month);closeModal();location.reload()}}));
+      });
+    }
+  };
+
+  // === UI HELPERS ===
+  function showModal(html,onOpen){
+    const o=document.getElementById('modalO'),c=document.getElementById('modalC');if(!o||!c)return;
+    c.innerHTML=`<div class="modal-h"><button class="modal-close" id="mClose">×</button></div><div>${html}</div>`;o.classList.add('active');
+    const close=()=>{o.classList.remove('active');c.innerHTML='';document.removeEventListener('keydown',esc)};
+    document.getElementById('mClose')?.addEventListener('click',close);o.addEventListener('click',e=>{if(e.target===o)close()});
+    const esc=e=>{if(e.key==='Escape')close()};document.addEventListener('keydown',esc);if(onOpen)onOpen();
+  }
+  function closeModal(){const o=document.getElementById('modalO'),c=document.getElementById('modalC');if(o)o.classList.remove('active');if(c)c.innerHTML=''}
+  function showPopup(html,anchor){
+    hidePopups();const pc=document.getElementById('popupC');if(!pc)return;
+    const p=document.createElement('div');p.className='popup';p.innerHTML=html;pc.appendChild(p);
+    const ar=anchor.getBoundingClientRect(),pr=p.getBoundingClientRect(),vw=window.innerWidth,vh=window.innerHeight;
+    let l=ar.right+10,t=ar.top;if(l+pr.width>vw)l=ar.left-pr.width-10;if(l<10)l=10;if(t+pr.height>vh)t=vh-pr.height-10;if(t<10)t=10;
+    p.style.left=l+'px';p.style.top=t+'px';
+    setTimeout(()=>{document.addEventListener('click',hideOut);window.addEventListener('scroll',()=>positionPopup(p,anchor),{passive:true});window.addEventListener('resize',()=>positionPopup(p,anchor),{passive:true})},0);
+    return p;
+  }
+  function hidePopups(){const pc=document.getElementById('popupC');if(pc)pc.innerHTML='';document.removeEventListener('click',hideOut)}
+  function hideOut(e){const p=document.querySelector('.popup');if(p&&!p.contains(e.target)&&!e.target.closest('.popup'))hidePopups()}
+  function positionPopup(p,anchor){const ar=anchor.getBoundingClientRect(),pr=p.getBoundingClientRect(),vw=window.innerWidth,vh=window.innerHeight;let l=ar.right+10,t=ar.top;if(l+pr.width>vw)l=ar.left-pr.width-10;if(l<10)l=10;if(t+pr.height>vh)t=vh-pr.height-10;if(t<10)t=10;p.style.left=l+'px';p.style.top=t+'px'}
+
+  // === RENDER ===
+  function age(bd){if(!bd)return'-';const t=new Date(),b=new Date(bd);let a=t.getFullYear()-b.getFullYear(),m=t.getMonth()-b.getMonth();if(m<0||(m===0&&t.getDate()<b.getDate()))a--;return a}
+  function renderProjects(){
+    const data=Store.getMonth(State.year,State.month),tb=document.getElementById('projBody'),tp=document.getElementById('totalProfit');if(!tb)return;
+    let projs=[...data.projects];
+    if(State.filters.proj?.company)projs=projs.filter(p=>p.company.toLowerCase().includes(State.filters.proj.company.toLowerCase()));
+    if(State.filters.proj?.name)projs=projs.filter(p=>p.name.toLowerCase().includes(State.filters.proj.name.toLowerCase()));
+    if(State.sort.proj?.column){const{column,dir}=State.sort.proj;projs.sort((a,b)=>{let va=a[column],vb=b[column];if(column==='staff'){va=Calc.projRevenue(a,data.employees,State.year,State.month).usedEffectiveCapacity;vb=Calc.projRevenue(b,data.employees,State.year,State.month).usedEffectiveCapacity}if(column==='profit'){va=Calc.projProfit(a,data.employees,State.year,State.month);vb=Calc.projProfit(b,data.employees,State.year,State.month)}if(typeof va==='string')va=va.toLowerCase();if(typeof vb==='string')vb=vb.toLowerCase();if(va<vb)return dir==='asc'?-1:1;if(va>vb)return dir==='asc'?1:-1;return 0})}
+    tb.innerHTML='';let totP=0;
+    if(projs.length===0){tb.innerHTML='<tr><td colspan="6" style="text-align:center;color:#888">No projects</td></tr>';if(tp)tp.textContent='';return}
+    projs.forEach(proj=>{const r=Calc.projRevenue(proj,data.employees,State.year,State.month),c=Calc.projCosts(proj,data.employees),p=r.total-c.total;totP+=p;const uc=r.usedEffectiveCapacity.toFixed(1),ov=parseFloat(uc)>proj.capacity;
+      const tr=document.createElement('tr');tr.innerHTML=`<td>${proj.company}</td><td>${proj.name}</td><td>${proj.budget.toLocaleString()} $</td><td class="${ov?'overflow':''}">${uc}/${proj.capacity}</td><td class="${p>=0?'text-s':'text-d'}">${p.toFixed(2)} $</td><td><button class="btn btn-sm btn-secondary view-emp" data-id="${proj.id}">👥 ${proj.assignments?.length||0}</button><button class="btn btn-sm btn-danger del-proj" data-id="${proj.id}">🗑️</button></td>`;tb.appendChild(tr)});
+    if(tp){tp.textContent=`Total: ${totP.toFixed(2)} $`;tp.className=`total-profit ${totP>=0?'pos':'neg'}`}
+    tb.querySelectorAll('.view-emp').forEach(b=>b.addEventListener('click',e=>showProjEmps(e.currentTarget.dataset.id)));
+    tb.querySelectorAll('.del-proj').forEach(b=>b.addEventListener('click',e=>{if(confirm('Delete project?')){delProj(e.currentTarget.dataset.id)}}));
+  }
+  function renderEmployees(){
+    const data=Store.getMonth(State.year,State.month),tb=document.getElementById('empBody');if(!tb)return;
+    let emps=[...data.employees];
+    if(State.filters.emp?.firstName)emps=emps.filter(e=>e.firstName.toLowerCase().includes(State.filters.emp.firstName.toLowerCase()));
+    if(State.filters.emp?.lastName)emps=emps.filter(e=>e.lastName.toLowerCase().includes(State.filters.emp.lastName.toLowerCase()));
+    if(State.filters.emp?.position)emps=emps.filter(e=>e.position===State.filters.emp.position);
+    if(State.sort.emp?.column){const{column,dir}=State.sort.emp;emps.sort((a,b)=>{let va=a[column],vb=b[column];if(column==='age'){va=age(a.birthDate);vb=age(b.birthDate)}if(column==='payment'){va=Calc.empPayment(a);vb=Calc.empPayment(b)}if(column==='profit'){va=Calc.empProfit(a,data.projects,State.year,State.month);vb=Calc.empProfit(b,data.projects,State.year,State.month)}if(typeof va==='string')va=va.toLowerCase();if(typeof vb==='string')vb=vb.toLowerCase();if(va<vb)return dir==='asc'?-1:1;if(va>vb)return dir==='asc'?1:-1;return 0})}
+    tb.innerHTML='';
+    if(emps.length===0){tb.innerHTML='<tr><td colspan="9" style="text-align:center;color:#888">No employees</td></tr>';return}
+    emps.forEach(emp=>{const a=age(emp.birthDate),pay=Calc.empPayment(emp),prf=Calc.empProfit(emp,data.projects,State.year,State.month),load=emp.assignments.reduce((s,x)=>s+x.capacity,0),full=load>=1.5;
+      const tr=document.createElement('tr');tr.innerHTML=`<td>${emp.firstName}</td><td>${emp.lastName}</td><td>${a}</td><td><select class="pos-sel" data-id="${emp.id}">${CONFIG.POSITIONS.map(p=>`<option value="${p}" ${emp.position===p?'selected':''}>${p}</option>`).join('')}</select></td><td><input type="number" class="sal-inp" value="${emp.salary}" data-id="${emp.id}" style="width:70px"></td><td>${pay.toFixed(2)} $</td><td><button class="btn btn-sm btn-secondary view-assign" data-id="${emp.id}">📋 ${emp.assignments.length} <small>(${load.toFixed(1)}/1.5)</small></button></td><td class="${prf>=0?'text-s':'text-d'}">${prf.toFixed(2)} $</td><td><button class="btn btn-sm btn-primary assign-btn" data-id="${emp.id}" ${full?'disabled':''}>➕</button><button class="btn btn-sm btn-secondary vac-btn" data-id="${emp.id}">🏖️</button><button class="btn btn-sm btn-danger del-emp" data-id="${emp.id}">🗑️</button></td>`;tb.appendChild(tr)});
+    tb.querySelectorAll('.sal-inp').forEach(i=>i.addEventListener('change',e=>{const id=e.currentTarget.dataset.id,val=parseFloat(e.currentTarget.value);if(val>0){const d=Store.getMonth(State.year,State.month),emp=d.employees.find(x=>x.id===id);if(emp){emp.salary=val;Store.saveMonth(State.year,State.month,d);renderEmployees();renderProjects()}}}));
+    tb.querySelectorAll('.pos-sel').forEach(s=>s.addEventListener('change',e=>{const id=e.currentTarget.dataset.id,pos=e.currentTarget.value,d=Store.getMonth(State.year,State.month),emp=d.employees.find(x=>x.id===id);if(emp){emp.position=pos;Store.saveMonth(State.year,State.month,d);renderEmployees()}}));
+    tb.querySelectorAll('.assign-btn').forEach(b=>b.addEventListener('click',e=>showAssign(e.currentTarget.dataset.id,e.currentTarget)));
+    tb.querySelectorAll('.vac-btn').forEach(b=>b.addEventListener('click',e=>showVacCal(e.currentTarget.dataset.id)));
+    tb.querySelectorAll('.view-assign').forEach(b=>b.addEventListener('click',e=>showEmpAssigns(e.currentTarget.dataset.id)));
+    tb.querySelectorAll('.del-emp').forEach(b=>b.addEventListener('click',e=>{if(confirm('Delete employee?')){delEmp(e.currentTarget.dataset.id)}}));
+  }
+  function delProj(id){const d=Store.getMonth(State.year,State.month);d.projects=d.projects.filter(p=>p.id!==id);d.employees.forEach(e=>e.assignments=e.assignments.filter(a=>a.projectId!==id));Store.saveMonth(State.year,State.month,d);renderProjects();renderEmployees()}
+  function delEmp(id){const d=Store.getMonth(State.year,State.month);d.employees=d.employees.filter(e=>e.id!==id);d.projects.forEach(p=>p.assignments=p.assignments.filter(a=>a.employeeId!==id));Store.saveMonth(State.year,State.month,d);renderEmployees();renderProjects()}
+  function showProjEmps(pid){const d=Store.getMonth(State.year,State.month),proj=d.projects.find(p=>p.id===pid);if(!proj)return;
+    let h=`<h3>👥 ${proj.name}</h3>`;if(!proj.assignments?.length)h+='<p style="color:#888">No employees</p>';
+    else{h+='<table style="width:100%;font-size:.9rem"><thead><tr><th>Employee</th><th>Cap</th><th>Fit</th><th>Vac</th><th>Eff</th><th>Rev</th><th>Cost</th><th>Profit</th><th>Actions</th></tr></thead><tbody>';
+      proj.assignments.forEach(a=>{const emp=d.employees.find(e=>e.id===a.employeeId);if(!emp)return;const vc=Calc.vacCoeff(State.year,State.month,emp.vacationDays||[]),ec=Calc.effCap(a.capacity,a.fit,vc),rd=Calc.projRevenue(proj,[emp],State.year,State.month),rev=rd.byEmployee[emp.id]||0,cost=Calc.empCost(emp.salary,a.capacity),prf=rev-cost;
+        h+=`<tr><td><strong>${emp.firstName} ${emp.lastName}</strong></td><td>${a.capacity.toFixed(2)}</td><td>${a.fit.toFixed(2)}</td><td>${emp.vacationDays?.length||0}</td><td>${ec.toFixed(3)}</td><td>${rev.toFixed(2)}$</td><td>${cost.toFixed(2)}$</td><td class="${prf>=0?'text-s':'text-d'}">${prf.toFixed(2)}$</td><td><button class="btn btn-sm btn-secondary edit-ass" data-eid="${emp.id}" data-pid="${proj.id}">✏️</button><button class="btn btn-sm btn-danger unass" data-eid="${emp.id}" data-pid="${proj.id}">❌</button></td></tr>`});h+='</tbody></table>'}
+    showModal(h);}
+  function showEmpAssigns(eid){const d=Store.getMonth(State.year,State.month),emp=d.employees.find(e=>e.id===eid);if(!emp)return;
+    let h=`<h3>📋 ${emp.firstName} ${emp.lastName}</h3>`;if(!emp.assignments?.length)h+='<p style="color:#888">No assignments</p>';
+    else{h+='<table style="width:100%;font-size:.9rem"><thead><tr><th>Project</th><th>Cap</th><th>Fit</th><th>Vac</th><th>Eff</th><th>Rev</th><th>Cost</th><th>Profit</th><th>Actions</th></tr></thead><tbody>';
+      emp.assignments.forEach(a=>{const proj=d.projects.find(p=>p.id===a.projectId);if(!proj)return;const vc=Calc.vacCoeff(State.year,State.month,emp.vacationDays||[]),ec=Calc.effCap(a.capacity,a.fit,vc),rd=Calc.projRevenue(proj,[emp],State.year,State.month),rev=rd.byEmployee[emp.id]||0,cost=Calc.empCost(emp.salary,a.capacity),prf=rev-cost;
+        h+=`<tr><td><strong>${proj.name}</strong> (${proj.company})</td><td>${a.capacity.toFixed(2)}</td><td>${a.fit.toFixed(2)}</td><td>${emp.vacationDays?.length||0}</td><td>${ec.toFixed(3)}</td><td>${rev.toFixed(2)}$</td><td>${cost.toFixed(2)}$</td><td class="${prf>=0?'text-s':'text-d'}">${prf.toFixed(2)}$</td><td><button class="btn btn-sm btn-secondary edit-ass" data-eid="${emp.id}" data-pid="${proj.id}">✏️</button><button class="btn btn-sm btn-danger unass" data-eid="${emp.id}" data-pid="${proj.id}">❌</button></td></tr>`});h+='</tbody></table>'}
+    showModal(h);}
+  function showAssign(eid,anchor){const d=Store.getMonth(State.year,State.month),emp=d.employees.find(e=>e.id===eid);if(!emp)return;
+    const load=emp.assignments.reduce((s,a)=>s+a.capacity,0),avail=Math.max(0,1.5-load);if(avail<=0){alert('Employee at max capacity (1.5)');return}
+    const projs=d.projects.filter(p=>p.capacity>(p.assignments?.reduce((s,a)=>{const e=d.employees.find(x=>x.id===a.employeeId);return s+(e?a.capacity:0)},0)||0));
+    let h=`<h3>➕ Assign</h3><p><strong>${emp.firstName} ${emp.lastName}</strong> | Load: ${load.toFixed(1)}/1.5</p>
+      <div class="form-g"><label>Project:</label><select id="pSel">${projs.map(p=>`<option value="${p.id}">${p.name} (${p.company})</option>`).join('')}</select></div>
+      <div class="form-g"><label>Capacity (0-${avail.toFixed(1)}): <span id="cVal">0.5</span></label><input type="range" id="cRng" min="0" max="${avail}" step="0.1" value="0.5"></div>
+      <div class="form-g"><label>Fit (0-1): <span id="fVal">0.8</span></label><input type="range" id="fRng" min="0" max="1" step="0.1" value="0.8"></div>
+      <p><strong>Effective:</strong> <span id="eCap">0.400</span></p><div style="display:flex;gap:.5rem"><button class="btn btn-primary" id="doAssign">Assign</button><button class="btn btn-secondary" id="cancelAss">Cancel</button></div>`;
+    const pop=showPopup(h,anchor);
+    const cR=pop.querySelector('#cRng'),fR=pop.querySelector('#fRng');
+    function upd(){pop.querySelector('#cVal').textContent=parseFloat(cR.value).toFixed(1);pop.querySelector('#fVal').textContent=parseFloat(fR.value).toFixed(1);const vc=Calc.vacCoeff(State.year,State.month,emp.vacationDays||[]),ec=Calc.effCap(parseFloat(cR.value),parseFloat(fR.value),vc);pop.querySelector('#eCap').textContent=ec.toFixed(3)}
+    cR.addEventListener('input',upd);fR.addEventListener('input',upd);upd();
+    pop.querySelector('#doAssign').addEventListener('click',()=>{const pid=pop.querySelector('#pSel').value,cap=parseFloat(cR.value),fit=parseFloat(fR.value),proj=d.projects.find(p=>p.id===pid);
+      emp.assignments.push({projectId:pid,capacity:cap,fit});proj.assignments.push({employeeId:eid,capacity:cap,fit});Store.saveMonth(State.year,State.month,d);hidePopups();renderProjects();renderEmployees()});
+    pop.querySelector('#cancelAss').addEventListener('click',hidePopups);}
+  function showVacCal(eid){const d=Store.getMonth(State.year,State.month),emp=d.employees.find(e=>e.id===eid);if(!emp)return;
+    const m=State.month,y=State.year,fd=new Date(y,m,1),ld=new Date(y,m+1,0),sp=fd.getDay(),td=ld.getDate(),wdT=Calc.workDays(y,m);let sel=[...(emp.vacationDays||[])];
+    function fmtRng(days){if(!days.length)return'';const s=[...days].sort((a,b)=>a-b),r=[],st=s[0],en=s[0];for(let i=1;i<s.length;i++){if(s[i]===en+1||(s[i]===en+3&&[0,6].includes(new Date(y,m,en+1).getDay()))){en=s[i]}else{r.push(st===en?`${String(st).padStart(2,'0')}.${String(m+1).padStart(2,'0')}`:`${String(st).padStart(2,'0')}.${String(m+1).padStart(2,'0')}-${String(en).padStart(2,'0')}.${String(m+1).padStart(2,'0')}`);st=en=s[i]}}r.push(st===en?`${String(st).padStart(2,'0')}.${String(m+1).padStart(2,'0')}`:`${String(st).padStart(2,'0')}.${String(m+1).padStart(2,'0')}-${String(en).padStart(2,'0')}.${String(m+1).padStart(2,'0')}`);return r.join(', ')}
+    function render(){const vw=Calc.vacWorkDays(y,m,sel),aw=wdT-vw;let h=`<h3>🏖️ ${emp.firstName} ${emp.lastName}</h3><p><strong>${CONFIG.MONTHS[m]} ${y}</strong></p><p>Working: <strong>${aw}/${wdT}</strong></p><div class="cal-g"><div class="cal-d">Su</div><div class="cal-d">Mo</div><div class="cal-d">Tu</div><div class="cal-d">We</div><div class="cal-d">Th</div><div class="cal-d">Fr</div><div class="cal-d">Sa</div>`;
+      for(let i=0;i<sp;i++)h+='<div class="cal-d"></div>';const today=new Date();for(let day=1;day<=td;day++){const dt=new Date(y,m,day),we=dt.getDay()===0||dt.getDay()===6,isT=today.getDate()===day&&today.getMonth()===m&&today.getFullYear()===y,isV=sel.includes(day),cl='cal-d'+(we?' we':'')+(isT?' to':'')+(isV?' va':'');h+=`<div class="${cl}" data-day="${day}">${day}</div>`}h+='</div>';
+      h+=`<p><strong>Selected:</strong> ${fmtRng(sel)||'none'}</p><div style="display:flex;gap:.5rem"><button class="btn btn-primary" id="saveVac">Save</button><button class="btn btn-secondary" id="cancelVac">Cancel</button></div>`;return h}
+    showModal(render(),()=>{document.querySelectorAll('.cal-d[data-day]').forEach(c=>c.addEventListener('click',()=>{const day=parseInt(c.dataset.day);sel=sel.includes(day)?sel.filter(d=>d!==day):[...sel,day];const mb=document.querySelector('.modal');if(mb)mb.innerHTML=`<div class="modal-h"><button class="modal-close" id="mClose">×</button></div><div>${render()}</div>`;document.getElementById('mClose')?.addEventListener('click',closeModal);setupCal()}));setupCal()});
+    function setupCal(){document.getElementById('saveVac')?.addEventListener('click',()=>{emp.vacationDays=sel;Store.saveMonth(State.year,State.month,d);closeModal();renderProjects();renderEmployees()});document.getElementById('cancelVac')?.addEventListener('click',closeModal);document.getElementById('mClose')?.addEventListener('click',closeModal)}}
+
+  // === FORMS ===
+  function openAddForm(type){
+    const sc=document.getElementById('slideContent');if(!sc)return;
+    if(type==='employee'){sc.innerHTML=`<h3>➕ New Employee</h3><form id="empF"><div class="form-g"><label>Name *</label><input type="text" id="fName" required pattern="[A-Za-z]{3,}"></div><div class="form-g"><label>Surname *</label><input type="text" id="lName" required pattern="[A-Za-z]{3,}"></div><div class="form-g"><label>Birth Date *</label><input type="date" id="bDate" required></div><div class="form-g"><label>Position *</label><select id="position" required>${CONFIG.POSITIONS.map(p=>`<option value="${p}">${p}</option>`).join('')}</select></div><div class="form-g"><label>Salary *</label><input type="number" id="salary" required min="0" step="0.01"></div><div id="fErr" style="color:var(--danger);margin:.5rem 0"></div><div class="form-a"><button type="submit" class="btn btn-primary" id="subBtn">Save</button><button type="button" class="btn btn-secondary" onclick="document.getElementById('slideClose').click()">Cancel</button></div></form>`;setupEmpForm()}
+    else{sc.innerHTML=`<h3>➕ New Project</h3><form id="projF"><div class="form-g"><label>Project Name *</label><input type="text" id="pName" required pattern="[A-Za-z0-9]{3,}"></div><div class="form-g"><label>Company *</label><input type="text" id="company" required pattern="[A-Za-z0-9]{2,}"></div><div class="form-g"><label>Budget *</label><input type="number" id="budget" required min="0" step="0.01"></div><div class="form-g"><label>Capacity *</label><input type="number" id="capacity" required min="1"></div><div id="fErr" style="color:var(--danger);margin:.5rem 0"></div><div class="form-a"><button type="submit" class="btn btn-primary" id="subBtn">Save</button><button type="button" class="btn btn-secondary" onclick="document.getElementById('slideClose').click()">Cancel</button></div></form>`;setupProjForm()}
+    document.getElementById('slidePanel').classList.add('open');
+  }
+  function setupEmpForm(){const f=document.getElementById('empF'),sb=document.getElementById('subBtn'),er=document.getElementById('fErr'),bd=document.getElementById('bDate');const maxD=new Date();maxD.setFullYear(maxD.getFullYear()-CONFIG.MIN_AGE);bd.max=maxD.toISOString().split('T')[0];
+    function val(){er.textContent='';const fn=f.fName.value.trim(),ln=f.lName.value.trim(),bt=f.bDate.value,sal=parseFloat(f.salary.value);if(!/^[A-Za-z]{3,}$/.test(fn)){er.textContent='Name: min 3 letters';return false}if(!/^[A-Za-z]{3,}$/.test(ln)){er.textContent='Surname: min 3 letters';return false}if(!bt){er.textContent='Birth date required';return false}if(new Date(bt)>maxD){er.textContent='Must be 18+';return false}if(!f.position.value){er.textContent='Select position';return false}if(isNaN(sal)||sal<=0){er.textContent='Salary > 0';return false}return true}
+    f.querySelectorAll('input,select').forEach(i=>{i.addEventListener('input',()=>sb.disabled=!val());i.addEventListener('blur',val)});
+    f.addEventListener('submit',e=>{e.preventDefault();if(!val())return;const d=Store.getMonth(State.year,State.month);d.employees.push({id:Store.genId('emp'),firstName:f.fName.value.trim(),lastName:f.lName.value.trim(),birthDate:f.bDate.value,position:f.position.value,salary:parseFloat(f.salary.value),assignments:[],vacationDays:[]});Store.saveMonth(State.year,State.month,d);document.getElementById('slidePanel').classList.remove('open');renderEmployees();renderProjects()});sb.disabled=true}
+  function setupProjForm(){const f=document.getElementById('projF'),sb=document.getElementById('subBtn'),er=document.getElementById('fErr');
+    function val(){er.textContent='';const nm=f.pName.value.trim(),co=f.company.value.trim(),bu=parseFloat(f.budget.value),ca=parseInt(f.capacity.value);if(!/^[A-Za-z0-9]{3,}$/.test(nm)){er.textContent='Name: min 3 chars';return false}if(!/^[A-Za-z0-9]{2,}$/.test(co)){er.textContent='Company: min 2 chars';return false}if(isNaN(bu)||bu<=0){er.textContent='Budget > 0';return false}if(isNaN(ca)||ca<1){er.textContent='Capacity >= 1';return false}return true}
+    f.querySelectorAll('input').forEach(i=>{i.addEventListener('input',()=>sb.disabled=!val());i.addEventListener('blur',val)});
+    f.addEventListener('submit',e=>{e.preventDefault();if(!val())return;const d=Store.getMonth(State.year,State.month);d.projects.push({id:Store.genId('proj'),name:f.pName.value.trim(),company:f.company.value.trim(),budget:parseFloat(f.budget.value),capacity:parseInt(f.capacity.value),assignments:[]});Store.saveMonth(State.year,State.month,d);document.getElementById('slidePanel').classList.remove('open');renderProjects();renderEmployees()});sb.disabled=true}
+
+  // === INIT ===
+  function init(){
+    Store.init();
+    // Populate selectors
+    const ms=document.getElementById('monthSel'),ys=document.getElementById('yearSel');
+    CONFIG.MONTHS.forEach((n,i)=>{const o=document.createElement('option');o.value=i;o.textContent=n;ms.appendChild(o)});
+    CONFIG.YEARS.forEach(y=>{const o=document.createElement('option');o.value=y;o.textContent=y;ys.appendChild(o)});
+    ms.value=State.month;ys.value=State.year;
+    // Sidebar toggle
+    document.getElementById('sbToggle').addEventListener('click',()=>document.getElementById('sidebar').classList.toggle('collapsed'));
+    // Tabs
+    document.querySelectorAll('.nav-tab').forEach(t=>t.addEventListener('click',e=>{document.querySelectorAll('.nav-tab').forEach(x=>x.classList.remove('active'));e.currentTarget.classList.add('active');const v=e.currentTarget.dataset.view;document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById(v==='projects'?'projView':'empView').classList.add('active');State.view=v;v==='projects'?renderProjects():renderEmployees()}));
+    // Period change
+    ms.addEventListener('change',e=>{State.month=parseInt(e.target.value);loadPeriod()});ys.addEventListener('change',e=>{State.year=parseInt(e.target.value);loadPeriod()});
+    // Buttons
+    document.getElementById('seedBtn').addEventListener('click',()=>Seed.showSeedModal());
+    document.getElementById('addBtn').addEventListener('click',()=>openAddForm(State.view==='projects'?'project':'employee'));
+    document.getElementById('slideClose').addEventListener('click',()=>document.getElementById('slidePanel').classList.remove('open'));
+    // Sorting
+    document.querySelectorAll('th[data-sort]').forEach(th=>th.addEventListener('click',()=>{const col=th.dataset.sort,vw=State.view==='projects'?'proj':'emp',sr=State.sort[vw];if(sr.column===col)sr.direction=sr.direction==='asc'?'desc':'asc';else{sr.column=col;sr.direction='asc'}document.querySelectorAll('th[data-sort]').forEach(t=>t.classList.remove('sorted-asc','sorted-desc'));th.classList.add(sr.direction==='asc'?'sorted-asc':'sorted-desc');vw==='proj'?renderProjects():renderEmployees()}));
+    // Filtering
+    document.querySelectorAll('th[data-filter]').forEach(th=>{const ic=th.querySelector('span:last-child');if(!ic)return;ic.addEventListener('click',e=>{e.stopPropagation();const col=th.dataset.filter,vw=State.view==='projects'?'proj':'emp';showFilter(col,vw,ic)})});
+    renderProjects();
+  }
+  function loadPeriod(){const d=Store.getMonth(State.year,State.month);window.currentData=d;State.view==='projects'?renderProjects():renderEmployees()}
+  function showFilter(col,vw,anchor){hidePopups();const cv=State.filters[vw]?.[col]||'';let c=`<div style="padding:.5rem"><strong>Filter: ${col}</strong><br>`;if(col==='position'){c+=`<select id="fSel" style="margin-top:.5rem;width:100%"><option value="">All</option>${CONFIG.POSITIONS.map(p=>`<option value="${p}" ${cv===p?'selected':''}>${p}</option>`).join('')}</select>`}else{c+=`<input type="text" id="fInp" value="${cv}" placeholder="Type..." style="margin-top:.5rem;width:100%">`}c+=`<div style="margin-top:.5rem;display:flex;gap:.5rem"><button class="btn btn-primary btn-sm" id="applyF">Apply</button><button class="btn btn-secondary btn-sm" id="cancelF">Cancel</button></div></div>`;const pop=showPopup(c,anchor);pop.querySelector('#applyF')?.addEventListener('click',()=>{const val=col==='position'?pop.querySelector('#fSel').value:pop.querySelector('#fInp').value;if(!State.filters[vw])State.filters[vw]={};if(val)State.filters[vw][col]=val;else delete State.filters[vw][col];hidePopups();vw==='proj'?renderProjects():renderEmployees()});pop.querySelector('#cancelF')?.addEventListener('click',hidePopups)}
+
+  // === START ===
+  document.addEventListener('DOMContentLoaded',init);
+  </script>
 </body>
 </html>
