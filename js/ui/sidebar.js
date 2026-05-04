@@ -9,6 +9,7 @@ export function initSidebar() {
 
   // Устанавливаем текущий месяц/год
   setCurrentPeriod();
+}
 
   // Обработчик кнопки сворачивания
   const toggleBtn = document.getElementById('sidebarToggle');
@@ -56,21 +57,30 @@ export function initSidebar() {
     });
   });
 
-  // Кнопка "Данные посева"
-  const seedBtn = document.getElementById('seedDataBtn');
-  if (seedBtn) {
-    seedBtn.addEventListener('click', () => {
-      alert('Функция "Данные посева" пока не реализована');
+// Кнопка "Данные посева"
+const seedBtn = document.getElementById('seedDataBtn');
+if (seedBtn) {
+  seedBtn.addEventListener('click', () => {
+    // Импортируем и вызываем реальную функцию
+    import('../seed.js').then(module => {
+      module.SeedData.showSeedModal();
     });
-  }
+  });
+}
 
-  // Кнопка "Добавить"
-  const addBtn = document.getElementById('addBtn');
-  if (addBtn) {
-    addBtn.addEventListener('click', () => {
-      alert('Форма добавления пока не реализована');
+// Кнопка "Добавить"
+const addBtn = document.getElementById('addBtn');
+if (addBtn) {
+  addBtn.addEventListener('click', () => {
+    // Определяем текущую вкладку
+    const currentView = document.querySelector('.nav-tab.active')?.dataset.view || 'projects';
+    const formType = currentView === 'projects' ? 'project' : 'employee';
+
+    // Открываем форму
+    import('./forms.js').then(module => {
+      module.openAddForm(formType);
     });
-  }
+  });
 }
 
 function populateMonthSelect() {
@@ -105,9 +115,15 @@ function setCurrentPeriod() {
   if (yearSelect) yearSelect.value = AppState.currentYear;
 }
 
+// Простая функция, которая только сообщает о смене периода
 async function handlePeriodChange() {
   console.log(`Период изменен: ${AppState.currentYear}-${AppState.currentMonth}`);
-  // Здесь должна быть логика загрузки данных за новый период
-  // Например: await loadCurrentMonth();
-  // И перерисовка таблиц: if (AppState.currentView === 'projects') renderProjects(); else renderEmployees();
+
+  // Создаём и отправляем событие, которое поймает app.js
+  window.dispatchEvent(new CustomEvent('periodChanged', {
+    detail: {
+      year: AppState.currentYear,
+      month: AppState.currentMonth
+    }
+  }));
 }

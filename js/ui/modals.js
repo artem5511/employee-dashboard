@@ -1,3 +1,10 @@
+// js/ui/modals.js
+
+export function initModals() {
+  // Инициализация модальных окон (заглушка)
+  console.log("Modals initialized");
+}
+
 export function showModal(htmlContent, onOpen) {
   const overlay = document.getElementById('modalOverlay');
   const container = document.getElementById('modalContainer');

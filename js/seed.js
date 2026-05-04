@@ -1,6 +1,7 @@
+// js/seed.js
 import { Storage } from './storage.js';
 import { CONFIG } from './config.js';
-import { showModal } from './ui/modals.js';
+import { showModal, closeModal } from './ui/modals.js';
 
 const NAMES = ['Иван','Анна','Сергей','Мария','Дмитрий','Елена','Алексей','Ольга','Михаил','Татьяна'];
 const SURNAMES = ['Иванов','Петров','Сидоров','Смирнов','Кузнецов','Попов','Соколов','Михайлов','Новиков','Федоров'];
@@ -10,6 +11,9 @@ const PROJECTS = ['Mobile App','CRM System','AI Chatbot','Payment Gateway','Anal
 
 function rand(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
 function randItem(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+// Получаем AppState из глобального окна
+const getAppState = () => window.AppState || { currentYear: 2026, currentMonth: 0 };
 
 export const SeedData = {
   generateEmployee() {
@@ -46,9 +50,9 @@ export const SeedData = {
       const count = rand(1, Math.min(3, employees.length));
       for (let i = 0; i < count; i++) {
         const emp = employees[rand(0, employees.length - 1)];
-        if (!emp.assignments.find(a => a.projectId === proj.id) &&
-            emp.assignments.reduce((s,a) => s + a.capacity, 0) < 1.5) {
-          const cap = Math.min(0.5, 1.5 - emp.assignments.reduce((s,a) => s + a.capacity, 0));
+        const currentLoad = emp.assignments.reduce((s, a) => s + a.capacity, 0);
+        if (!emp.assignments.find(a => a.projectId === proj.id) && currentLoad < 1.5) {
+          const cap = Math.min(0.5, 1.5 - currentLoad);
           proj.assignments.push({ employeeId: emp.id, capacity: cap, fit: rand(7,10)/10 });
           emp.assignments.push({ projectId: proj.id, capacity: cap, fit: rand(7,10)/10 });
         }
@@ -59,11 +63,17 @@ export const SeedData = {
   },
 
   showSeedModal() {
+    // ИСПОЛЬЗУЕМ window.AppState вместо AppState
+    const state = getAppState();
     const allData = Storage.getAllData();
-    const months = Object.keys(allData).filter(k => k !== `${AppState.currentYear}-${AppState.currentMonth}`);
+    const currentKey = `${state.currentYear}-${state.currentMonth}`;
+    const months = Object.keys(allData).filter(k => k !== currentKey);
 
     if (months.length === 0) {
-      alert('Нет других месяцев с данными для копирования');
+      if (confirm('Нет данных для копирования. Сгенерировать случайные данные для текущего месяца?')) {
+        this.seedMonth(state.currentYear, state.currentMonth);
+        location.reload();
+      }
       return;
     }
 
@@ -72,20 +82,31 @@ export const SeedData = {
       const [y, m] = key.split('-').map(Number);
       const data = allData[key];
       html += `<div style="padding:0.5rem;border:1px solid var(--border);border-radius:4px;margin:0.5rem 0;display:flex;justify-content:space-between;align-items:center">
-        <span><strong>${CONFIG.MONTHS[m]} ${y}</strong><br><small>👥 ${data.employees.length} | 📁 ${data.projects.length}</small></span>
-        <button class="btn btn-primary btn-sm" data-key="${key}">Посев</button>
+        <span><strong>${CONFIG.MONTHS[m]} ${y}</strong><br><small>👥 ${data.employees.length} сотрудников | 📁 ${data.projects.length} проектов</small></span>
+        <button class="btn btn-primary btn-sm" data-key="${key}">Копировать</button>
       </div>`;
     });
+
+    html += '<div style="margin-top:1rem;padding:0.5rem;background:#f0f9ff;border-radius:4px"><strong>💡 Или:</strong> <button class="btn btn-secondary btn-sm" id="generateNew">Сгенерировать новые данные</button></div>';
 
     showModal(html, () => {
       document.querySelectorAll('.modal button[data-key]').forEach(btn => {
         btn.addEventListener('click', () => {
           const [y, m] = btn.dataset.key.split('-').map(Number);
-          if (confirm(`Скопировать данные из ${CONFIG.MONTHS[m]} ${y} в текущий месяц?`)) {
-            Storage.copyMonthData(y, m, AppState.currentYear, AppState.currentMonth);
+          if (confirm(`Скопировать данные из ${CONFIG.MONTHS[m]} ${y}?`)) {
+            Storage.copyMonthData(y, m, state.currentYear, state.currentMonth);
+            closeModal();
             location.reload();
           }
         });
+      });
+
+      document.getElementById('generateNew')?.addEventListener('click', () => {
+        if (confirm('Сгенерировать 5 сотрудников и 3 проекта?')) {
+          this.seedMonth(state.currentYear, state.currentMonth);
+          closeModal();
+          location.reload();
+        }
       });
     });
   }

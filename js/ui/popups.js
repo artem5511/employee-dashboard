@@ -1,3 +1,10 @@
+// js/ui/popups.js
+
+// Заглушка для инициализации (чтобы app.js не падал)
+export function initPopups() {
+  console.log("Popups initialized");
+}
+
 let activePopup = null;
 
 export function showPopup(content, anchor, onShow) {
@@ -14,7 +21,6 @@ export function showPopup(content, anchor, onShow) {
   container.appendChild(popup);
   positionPopup(popup, anchor);
 
-  // Закрытие по клику вне
   setTimeout(() => {
     document.addEventListener('click', hideOnClickOutside);
     window.addEventListener('scroll', () => positionPopup(popup, anchor), { passive: true });
@@ -49,13 +55,9 @@ function positionPopup(popup, anchor) {
   let left = anchorRect.right + 10;
   let top = anchorRect.top;
 
-  if (left + popupRect.width > viewportWidth) {
-    left = anchorRect.left - popupRect.width - 10;
-  }
+  if (left + popupRect.width > viewportWidth) left = anchorRect.left - popupRect.width - 10;
   if (left < 10) left = 10;
-  if (top + popupRect.height > viewportHeight) {
-    top = viewportHeight - popupRect.height - 10;
-  }
+  if (top + popupRect.height > viewportHeight) top = viewportHeight - popupRect.height - 10;
   if (top < 10) top = 10;
 
   popup.style.left = `${left}px`;

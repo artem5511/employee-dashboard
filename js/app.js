@@ -32,6 +32,14 @@ export async function initApp() {
 
   renderProjects();
   setupGlobalListeners();
+  window.addEventListener('periodChanged', async (e) => {
+  await loadCurrentMonth();
+  if (AppState.currentView === 'projects') {
+    renderProjects();
+  } else {
+    renderEmployees();
+  }
+});
 }
 
 async function loadCurrentMonth() {
