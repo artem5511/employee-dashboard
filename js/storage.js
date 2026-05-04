@@ -1,23 +1,15 @@
-// js/storage.js
 import { CONFIG, DEFAULT_DATA } from './config.js';
 
 export const Storage = {
-  getKey() {
-    return CONFIG.STORAGE_KEY;
-  },
-
-  getMonthKey(year, month) {
-    return `${year}-${month}`;
-  },
+  getKey() { return CONFIG.STORAGE_KEY; },
+  getMonthKey(year, month) { return `${year}-${month}`; },
 
   getAllData() {
     const data = localStorage.getItem(this.getKey());
     return data ? JSON.parse(data) : {};
   },
 
-  saveAllData(data) {
-    localStorage.setItem(this.getKey(), JSON.stringify(data));
-  },
+  saveAllData(data) { localStorage.setItem(this.getKey(), JSON.stringify(data)); },
 
   getMonthData(year, month) {
     const allData = this.getAllData();
@@ -27,8 +19,7 @@ export const Storage = {
 
   saveMonthData(year, month, data) {
     const allData = this.getAllData();
-    const key = this.getMonthKey(year, month);
-    allData[key] = {
+    allData[this.getMonthKey(year, month)] = {
       employees: data.employees || [],
       projects: data.projects || []
     };
@@ -37,17 +28,13 @@ export const Storage = {
 
   copyMonthData(fromYear, fromMonth, toYear, toMonth) {
     const fromData = this.getMonthData(fromYear, fromMonth);
-    // Копируем с новыми ID и сбрасываем отпуска
     const employees = fromData.employees.map(emp => ({
-      ...emp,
-      id: `emp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      vacationDays: [],
-      assignments: emp.assignments.map(a => ({ ...a }))
+      ...emp, id: this.generateId('emp'), vacationDays: [],
+      assignments: emp.assignments.map(a => ({...a}))
     }));
     const projects = fromData.projects.map(proj => ({
-      ...proj,
-      id: `proj-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      assignments: proj.assignments.map(a => ({ ...a }))
+      ...proj, id: this.generateId('proj'),
+      assignments: proj.assignments.map(a => ({...a}))
     }));
     this.saveMonthData(toYear, toMonth, { employees, projects });
   },

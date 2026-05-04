@@ -1,6 +1,6 @@
 // js/ui/sidebar.js
 import { CONFIG } from '../config.js';
-import { AppState } from '../main.js';
+import { AppState } from '../app.js';
 
 export function initSidebar() {
   // Заполняем выпадающие списки месяца и года

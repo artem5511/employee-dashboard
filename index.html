@@ -11,27 +11,16 @@
     <!-- Боковая панель -->
     <aside class="sidebar" id="sidebar">
       <button class="sidebar-toggle" id="sidebarToggle" aria-label="Переключить панель">☰</button>
-
       <div class="sidebar-content">
         <h2 class="sidebar-title">📊 Панель управления</h2>
-
-        <!-- Выбор периода -->
         <div class="period-selector">
-          <select id="monthSelect" class="form-select">
-            <!-- Заполняется JS -->
-          </select>
-          <select id="yearSelect" class="form-select">
-            <!-- Заполняется JS -->
-          </select>
+          <select id="monthSelect" class="form-select"></select>
+          <select id="yearSelect" class="form-select"></select>
         </div>
-
-        <!-- Навигация -->
         <nav class="nav-tabs">
           <button class="nav-tab active" data-view="projects">📁 Проекты</button>
           <button class="nav-tab" data-view="employees">👥 Сотрудники</button>
         </nav>
-
-        <!-- Действия -->
         <div class="sidebar-actions">
           <button class="btn btn-secondary" id="seedDataBtn">🌱 Данные посева</button>
           <button class="btn btn-primary" id="addBtn">➕ Добавить</button>
@@ -41,28 +30,22 @@
 
     <!-- Основная область -->
     <main class="main-content">
-      <!-- Таблица проектов -->
+      <!-- Проекты -->
       <section id="projectsView" class="view active">
         <div class="view-header">
           <h1>Проекты</h1>
-          <div class="view-actions">
-            <span class="total-profit" id="totalProfit"></span>
-          </div>
+          <span class="total-profit" id="totalProfit"></span>
         </div>
-
-        <!-- Фильтры -->
         <div class="filters-bar" id="projectsFilters"></div>
-
-        <!-- Таблица -->
         <div class="table-container">
           <table class="data-table" id="projectsTable">
             <thead>
               <tr>
-                <th data-sort="company" data-filter>Компания ⇅ ⌕</th>
-                <th data-sort="name" data-filter>Проект ⇅ ⌕</th>
-                <th data-sort="budget">Бюджет ⇅</th>
-                <th data-sort="staff">Персонал ⇅</th>
-                <th data-sort="forecast">Прогноз ⇅</th>
+                <th data-sort="company" data-filter>Компания <span class="sort-icon">⇅</span> <span class="filter-icon">⌕</span></th>
+                <th data-sort="name" data-filter>Проект <span class="sort-icon">⇅</span> <span class="filter-icon">⌕</span></th>
+                <th data-sort="budget">Бюджет <span class="sort-icon">⇅</span></th>
+                <th data-sort="staff">Персонал <span class="sort-icon">⇅</span></th>
+                <th data-sort="forecast">Прогноз <span class="sort-icon">⇅</span></th>
                 <th>Действия</th>
               </tr>
             </thead>
@@ -71,26 +54,24 @@
         </div>
       </section>
 
-      <!-- Таблица сотрудников -->
+      <!-- Сотрудники -->
       <section id="employeesView" class="view">
         <div class="view-header">
           <h1>Сотрудники</h1>
         </div>
-
         <div class="filters-bar" id="employeesFilters"></div>
-
         <div class="table-container">
           <table class="data-table" id="employeesTable">
             <thead>
               <tr>
-                <th data-sort="firstName" data-filter>Имя ⇅ ⌕</th>
-                <th data-sort="lastName" data-filter>Фамилия ⇅ ⌕</th>
-                <th data-sort="age">Возраст ⇅</th>
-                <th data-sort="position" data-filter>Должность ⇅ ⌕</th>
-                <th data-sort="salary">Зарплата ⇅</th>
-                <th data-sort="payment">Выплата ⇅</th>
+                <th data-sort="firstName" data-filter>Имя <span class="sort-icon">⇅</span> <span class="filter-icon">⌕</span></th>
+                <th data-sort="lastName" data-filter>Фамилия <span class="sort-icon">⇅</span> <span class="filter-icon">⌕</span></th>
+                <th data-sort="age">Возраст <span class="sort-icon">⇅</span></th>
+                <th data-sort="position" data-filter>Должность <span class="sort-icon">⇅</span> <span class="filter-icon">⌕</span></th>
+                <th data-sort="salary">Зарплата <span class="sort-icon">⇅</span></th>
+                <th data-sort="payment">Выплата <span class="sort-icon">⇅</span></th>
                 <th>Проект</th>
-                <th data-sort="profit">Доход ⇅</th>
+                <th data-sort="profit">Доход <span class="sort-icon">⇅</span></th>
                 <th>Действия</th>
               </tr>
             </thead>
@@ -101,7 +82,7 @@
     </main>
   </div>
 
-  <!-- Выдвижная панель формы -->
+  <!-- Выдвижная панель -->
   <div class="slide-panel" id="slidePanel">
     <button class="slide-panel-close" id="slidePanelClose">×</button>
     <div id="slidePanelContent"></div>
@@ -110,10 +91,8 @@
   <!-- Модальные окна -->
   <div class="modal-overlay" id="modalOverlay"></div>
   <div class="modal" id="modalContainer"></div>
-
-  <!-- Контейнер для попапов -->
   <div id="popupContainer"></div>
 
-  <script type="module" src="js/main.js"></script>
+  <script type="module" src="js/app.js"></script>
 </body>
 </html>
